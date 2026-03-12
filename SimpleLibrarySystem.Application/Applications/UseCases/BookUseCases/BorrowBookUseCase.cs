@@ -53,11 +53,14 @@ namespace SimpleLibrarySystem.Application.Applications.UseCases.BookUseCases
                 await _bookRepository.UpdateAsync(book);
                 await _memberRepository.UpdateAsync(member);
 
+                if (_notification.Notify("member.Email", "Borrow processed successfully.").IsFailure)
+                { /* log the error */}
+
                 return Result.Success();
             }
             catch (Exception ex)
             {
-                return Result.Failure("A persistence error occurred. Data may be inconsistent.");
+                return Result.Failure("A persistence error occurred: " + ex.Message);
             }
 
 }
