@@ -47,12 +47,19 @@ namespace SimpleLibrarySystem.Application.Applications.UseCases.BookUseCases
             member.IncrementLoans();
             book.MarkAsBorrowed();
 
-            // 5. Persistence (Transactions should be here, but let's stick to the flow)
-            await _loanRepository.SaveAsync(loan);
-            await _bookRepository.UpdateAsync(book);
-            await _memberRepository.UpdateAsync(member);
+            try
+            {
+                await _loanRepository.SaveAsync(loan);
+                await _bookRepository.UpdateAsync(book);
+                await _memberRepository.UpdateAsync(member);
 
-            return Result.Success();
-        }
+                return Result.Success();
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure("A persistence error occurred. Data may be inconsistent.");
+            }
+
+}
     }
 }
