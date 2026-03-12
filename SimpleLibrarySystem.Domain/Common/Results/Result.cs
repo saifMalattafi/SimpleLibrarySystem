@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SimpleLibrarySystem.Application.Applications.Common.Results
+namespace SimpleLibrarySystem.Domain.Common.Results
 {
     public class Result
     {

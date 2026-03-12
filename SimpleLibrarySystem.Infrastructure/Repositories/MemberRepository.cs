@@ -1,7 +1,9 @@
 ﻿using SimpleLibrarySystem.Domain.Interfaces;
 using SimpleLibrarySystem.Domain.ValueObjects;
 using SimpleLibrarySystem.Domain.Entities;
-using System.Collections.Concurrent; 
+using System.Collections.Concurrent;
+using SimpleLibrarySystem.Domain.Common.Results;
+using System.Diagnostics.Metrics;
 
 namespace SimpleLibrarySystem.Infrastructure.Repositories
 {
@@ -10,46 +12,48 @@ namespace SimpleLibrarySystem.Infrastructure.Repositories
 
         private static readonly List<Member> _mockMembers = new List<Member>()
         {
-            Member.Create(Guid.NewGuid(), new PersonName("Alice"), Member.enMemberLevel.Premium),
-            Member.Create(Guid.NewGuid(), new PersonName("Bob"), Member.enMemberLevel.Regular),
-            Member.Create(Guid.NewGuid(), new PersonName("Charlie"), Member.enMemberLevel.Regular),
-            Member.Create(Guid.NewGuid(), new PersonName("Diana"), Member.enMemberLevel.Premium),
-            Member.Create(Guid.NewGuid(), new PersonName("Edward"), Member.enMemberLevel.Regular)
+            Member.Create(Guid.NewGuid(), PersonName.Create("Alice").Value, Member.enMemberLevel.Premium).Value,
+            Member.Create(Guid.NewGuid(), PersonName.Create("Bob").Value, Member.enMemberLevel.Regular).Value,
+            Member.Create(Guid.NewGuid(), PersonName.Create("Charlie").Value, Member.enMemberLevel.Regular).Value,
+            Member.Create(Guid.NewGuid(), PersonName.Create("Diana").Value, Member.enMemberLevel.Premium).Value,
+            Member.Create(Guid.NewGuid(), PersonName.Create("Edward").Value, Member.enMemberLevel.Regular).Value
         };
 
 
-        public Task AddAsync(Member member)
+        public async Task<Result> AddAsync(Member member)
         {
-            if (member == null) throw new ArgumentNullException(nameof(member));
+            if (member == null) return Result.Failure("Member is null");
 
             _mockMembers.Add(member);
-            return Task.CompletedTask;
+            return Result.Success();
 
         }
 
-        public Task DeleteAsync(Member member)
+        public async Task<Result> DeleteAsync(Member member)
         {
-            if (member == null) return Task.CompletedTask;
+            if (member == null) return Result.Failure("Member is null");
 
             _mockMembers.Remove(member);
-            return Task.CompletedTask;
+            return Result.Success();
         }
 
-        public Task<IEnumerable<Member>> GetAllAsync()
+        public async Task<IEnumerable<Member>> GetAllAsync()
         {
-            return Task.FromResult(_mockMembers.AsEnumerable());
+            return await Task.FromResult(_mockMembers.AsEnumerable());
         }
 
-        public Task<Member?> GetAsync(Guid id)
+        public async Task<ResultT<Member?>> GetAsync(Guid id)
         {
             var member = _mockMembers.FirstOrDefault(m => m.Id ==  id);
 
-            return Task.FromResult(member);
+            if (member == default) return ResultT<Member?>.Failure("member is not exists");
+
+            return ResultT<Member?>.Success(member);
         }
 
-        public Task UpdateAsync(Member member)
+        public async Task<Result> UpdateAsync(Member member)
         {
-            if (member == null) throw new ArgumentNullException(nameof(member));
+            if (member == null) return Result.Failure("Member is null");
 
             var index = _mockMembers.FindIndex(m => m.Id == member.Id);
 
@@ -58,7 +62,7 @@ namespace SimpleLibrarySystem.Infrastructure.Repositories
                 _mockMembers[index] = member;
             }
 
-            return Task.CompletedTask;
+            return Result.Success();
         }
     }
 }

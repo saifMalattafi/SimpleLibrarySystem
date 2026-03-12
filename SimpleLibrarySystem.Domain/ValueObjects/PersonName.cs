@@ -1,19 +1,26 @@
 ﻿
 
+using SimpleLibrarySystem.Domain.Common.Results;
+
 namespace SimpleLibrarySystem.Domain.ValueObjects
 {
     public class PersonName : ValueObject
     {
         public string Name { get; }
 
-        public PersonName(string name)
+        private PersonName(string name)
+        {
+            Name = name;
+        }
+
+        public static ResultT<PersonName> Create(string name)
         {
             name = name.Trim();
-            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name must not be null or empty.");
+            if (string.IsNullOrEmpty(name)) return ResultT<PersonName>.Failure("name must not be null or empty.");
 
-            if (name.Length < 2 || name.Length > 50) throw new ArgumentNullException("name length must be between 2 and 50 characters");
+            if (name.Length < 2 || name.Length > 50) return ResultT<PersonName>.Failure("name length must be between 2 and 50 characters");
 
-            Name = name;
+            return ResultT<PersonName>.Success(new PersonName(name));
         }
 
         protected override IEnumerable<object> GetEqualityComponents()

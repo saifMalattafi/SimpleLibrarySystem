@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using SimpleLibrarySystem.Application.Applications.UseCases.LoanUseCases;
 using SimpleLibrarySystem.Application.DTOs;
 
-namespace SimpleLibrarySystem.API.Controllers.LoanController
+namespace SimpleLibrarySystem.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -28,10 +28,10 @@ namespace SimpleLibrarySystem.API.Controllers.LoanController
 
             if (result.IsFailure)
             {
-                return BadRequest(new { Error = result.Error });
+                return BadRequest(new { result.Error });
             }
 
-            return Ok(new {Message = "Extending loan done Successfully"});
+            return Ok(new { Message = "Extending loan done Successfully" });
         }
     }
 }

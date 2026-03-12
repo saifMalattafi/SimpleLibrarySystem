@@ -1,16 +1,17 @@
-﻿using SimpleLibrarySystem.Domain.Entities;
+﻿using SimpleLibrarySystem.Domain.Common.Results;
+using SimpleLibrarySystem.Domain.Entities;
 
 namespace SimpleLibrarySystem.Domain.Interfaces
 {
     public interface ILoanRepository
     {
-        Task SaveAsync(Loan loan);
+        Task<Result> SaveAsync(Loan loan);
         Task UpdateAsync(Loan loan);
 
         Task DeleteAsync(Loan loan);
 
         Task<IEnumerable<Loan>> GetAllAsync();
 
-        Task<Loan> GetAsync(Guid id);
+        Task<ResultT<Loan>> GetAsync(Guid id);
     }
 }

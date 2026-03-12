@@ -1,4 +1,5 @@
 ﻿using SimpleLibrarySystem.Application.Applications.Interfaces;
+using SimpleLibrarySystem.Domain.Common.Results;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,9 +10,10 @@ namespace SimpleLibrarySystem.Infrastructure.Services
 {
     public class EmailNotificationService : INotificationService
     {
-        public void Notify(string to, string message)
+        public Result Notify(string to, string message)
         {
             // code to send the message via the email.
+            return Result.Success();
         }
     }
 }

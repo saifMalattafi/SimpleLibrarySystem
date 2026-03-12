@@ -1,4 +1,5 @@
 ﻿using SimpleLibrarySystem.Domain.Base;
+using SimpleLibrarySystem.Domain.Common.Results;
 using SimpleLibrarySystem.Domain.ValueObjects;
 
 namespace SimpleLibrarySystem.Domain.Entities
@@ -18,12 +19,17 @@ namespace SimpleLibrarySystem.Domain.Entities
         public Book(Guid id, ISBN? iSBN, string? title, PersonName? author, enStatus? status = enStatus.Available)
             : base(id)
         {
-            if (title == null || author == null) throw new ArgumentNullException("title/author can not be null...");
-
             ISBN = iSBN;
             Title = title;
             Author = author;
             Status = status;
+        }
+
+        public static ResultT<Book> Create(Guid id, ISBN? iSBN, string? title, PersonName? author, enStatus? status = enStatus.Available)
+        {
+            if (title == null || author == null) return ResultT<Book>.Failure("title/author can not be null...");
+
+            return ResultT<Book>.Success(new Book(id, iSBN, title, author, status));
         }
 
         public void MarkAsBorrowed()

@@ -1,16 +1,17 @@
-﻿using SimpleLibrarySystem.Domain.Entities;
+﻿using SimpleLibrarySystem.Domain.Common.Results;
+using SimpleLibrarySystem.Domain.Entities;
 
 namespace SimpleLibrarySystem.Domain.Interfaces
 {
     public interface IMemberRepository
     {
-        Task AddAsync(Member member);
-        Task UpdateAsync(Member member);
+        Task<Result> AddAsync(Member member);
+        Task<Result> UpdateAsync(Member member);
 
-        Task DeleteAsync(Member member);
+        Task<Result> DeleteAsync(Member member);
 
         Task<IEnumerable<Member>> GetAllAsync();
 
-        Task<Member> GetAsync(Guid id);
+        Task<ResultT<Member>> GetAsync(Guid id);
     }
 }

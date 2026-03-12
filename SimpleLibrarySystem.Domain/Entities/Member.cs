@@ -1,4 +1,5 @@
 ﻿using SimpleLibrarySystem.Domain.Base;
+using SimpleLibrarySystem.Domain.Common.Results;
 using SimpleLibrarySystem.Domain.ValueObjects;
 
 namespace SimpleLibrarySystem.Domain.Entities
@@ -26,9 +27,9 @@ namespace SimpleLibrarySystem.Domain.Entities
             _fines = fines; 
         }
 
-        public static Member Create(Guid Id, PersonName name, enMemberLevel level)
+        public static ResultT<Member> Create(Guid Id, PersonName name, enMemberLevel level)
         {
-            return new Member(Id, name, level, new List<Fine> { });
+            return ResultT<Member>.Success(new Member(Id, name, level, new List<Fine> { }));
         }
 
         public bool CanBorrow()

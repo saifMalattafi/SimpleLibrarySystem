@@ -1,4 +1,5 @@
-﻿using SimpleLibrarySystem.Domain.Entities;
+﻿using SimpleLibrarySystem.Domain.Common.Results;
+using SimpleLibrarySystem.Domain.Entities;
 using SimpleLibrarySystem.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -11,15 +12,15 @@ namespace SimpleLibrarySystem.Infrastructure.Repositories
     {
         private static readonly List<Loan> _loans = new List<Loan>();
 
-        public Task SaveAsync(Loan loan)
+        public async Task<Result> SaveAsync(Loan loan)
         {
-            if (loan == null) throw new ArgumentNullException(nameof(loan));
+            if (loan == null) return Result.Failure("loan must not be null");
 
             if (!_loans.Any(l => l.Id == loan.Id))
             {
-                _loans.Add(loan);
+               _loans.Add(loan);
             }
-            return Task.CompletedTask;
+            return Result.Success();
         }
 
         public Task UpdateAsync(Loan loan)
@@ -47,10 +48,13 @@ namespace SimpleLibrarySystem.Infrastructure.Repositories
             return Task.FromResult(_loans.AsEnumerable());
         }
 
-        public Task<Loan?> GetAsync(Guid id)
+        public async Task<ResultT<Loan?>> GetAsync(Guid id)
         {
             var loan = _loans.FirstOrDefault(l => l.Id == id);
-            return Task.FromResult(loan);
+
+            if (loan == default) return ResultT<Loan?>.Failure("loan is not Exists");
+
+            return ResultT<Loan?>.Success(loan);
         }
     }
 }

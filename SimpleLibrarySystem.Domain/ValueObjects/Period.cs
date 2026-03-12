@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SimpleLibrarySystem.Domain.Common.Results;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,12 +12,19 @@ namespace SimpleLibrarySystem.Domain.ValueObjects
         public DateTime Start {  get;}
         public DateTime End { get;}
 
-        public Period(DateTime start, DateTime end)
+        private Period(DateTime start, DateTime end)
         {
-            if (end <= start) throw new ArgumentException("End Date of Period must be after Start Date..");
-
             Start = start;
             End = end;
+        }
+
+        public Period() { }
+
+        public static ResultT<Period>Create(DateTime start, DateTime end)
+        {
+            if (end <= start) return ResultT<Period>.Failure("End Date of Period must be after Start Date..");
+
+            return ResultT<Period>.Success(new Period(start, end));
         }
 
         public bool IsOverDue()
@@ -30,9 +38,9 @@ namespace SimpleLibrarySystem.Domain.ValueObjects
             yield return End;
         }
 
-        public Period Extend(DateTime end)
+        public ResultT<Period> Extend(DateTime end)
         {
-            return new Period(Start, end);
+            return Create(Start, end);
         }
 
         public double DurationDays => (End - Start).TotalDays;

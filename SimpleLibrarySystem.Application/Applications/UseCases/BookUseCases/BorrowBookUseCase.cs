@@ -1,4 +1,4 @@
-﻿using SimpleLibrarySystem.Application.Applications.Common.Results;
+﻿using SimpleLibrarySystem.Domain.Common.Results;
 using SimpleLibrarySystem.Application.Applications.Interfaces;
 using SimpleLibrarySystem.Application.DTOs;
 using SimpleLibrarySystem.Domain.Entities;
@@ -24,19 +24,25 @@ namespace SimpleLibrarySystem.Application.Applications.UseCases.BookUseCases
 
         public async Task<Result> Execute(BorrowBookDTO borrowBookDTO)
         {
-            Member member = await _memberRepository.GetAsync(borrowBookDTO.MemberID);
-            if (member == null) return Result.Failure("Member Not Found!");
+            dynamic result = await _memberRepository.GetAsync(borrowBookDTO.MemberID);
+            if (result.IsFailure) return Result.Failure(result.Error);
 
-            Book book = await _bookRepository.GetAsync(borrowBookDTO.BookId);
-            if (book == null) return Result.Failure("Book Not Found!");
+            Member member = result.Value;
 
+            result = await _bookRepository.GetAsync(borrowBookDTO.BookId);
+            if (result.IsFailure) return Result.Failure(result.Error);
+
+            Book book = result.Value;
             if (!book.IsAvailable) return Result.Failure("Book is already borrowed or in In Repair.");
 
             if (!member.CanBorrow()) return Result.Failure($"Member Exceeds the Allowed Fines/loan limits");
 
             try
             {
-                Loan loan = Loan.CreateLoan(Guid.NewGuid(), book.Id, member, borrowBookDTO.Period);
+                result = Loan.CreateLoan(Guid.NewGuid(), book.Id, member, borrowBookDTO.Period);
+                if (result.IsFailure) return Result.Failure(result.Error);
+
+                Loan loan = result.Value;
 
                 member.IncrementLoans();
                 book.MarkAsBorrowed();
@@ -46,7 +52,8 @@ namespace SimpleLibrarySystem.Application.Applications.UseCases.BookUseCases
                 await _bookRepository.UpdateAsync(book);
                 await _memberRepository.UpdateAsync(member);
 
-                _notification.Notify("MemberEmail", "message that tell user the Borrowing has been done successfully.");
+                result = _notification.Notify("MemberEmail", "message that tell user the Borrowing has been done successfully.");
+                if (result.IsFailure) return Result.Failure(result.Error);
 
                 return Result.Success();
             }

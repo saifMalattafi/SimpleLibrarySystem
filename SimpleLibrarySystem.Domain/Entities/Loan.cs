@@ -1,4 +1,5 @@
 ﻿using SimpleLibrarySystem.Domain.Base;
+using SimpleLibrarySystem.Domain.Common.Results;
 using SimpleLibrarySystem.Domain.ValueObjects;
 using System;
 using System.Collections.Generic;
@@ -33,15 +34,15 @@ namespace SimpleLibrarySystem.Domain.Entities
             _extensions = loanExtensions;   
         }
 
-        public static Loan CreateLoan(Guid id, Guid bookId, Member member, Period? borrowedPeriod)
+        public static ResultT<Loan> CreateLoan(Guid id, Guid bookId, Member member, Period? borrowedPeriod)
         {
             if (member.MemberLevel == Member.enMemberLevel.Regular && borrowedPeriod?.DurationDays > 14)
-                throw new ArgumentException("BorrowPeriod cannot exceed 14 days for Regular members");
+                return ResultT<Loan>.Failure("BorrowPeriod cannot exceed 14 days for Regular members");
 
             if (member.MemberLevel == Member.enMemberLevel.Premium && borrowedPeriod?.DurationDays > 30)
-                throw new ArgumentException("BorrowPeriod cannot exceed 30 days for Premium members");
+                return ResultT<Loan>.Failure("BorrowPeriod cannot exceed 30 days for Premium members");
 
-            return new Loan(id, bookId, member.Id, borrowedPeriod, enStatus.Active, new List<LoanExtension> { });
+            return ResultT<Loan>.Success(new Loan(id, bookId, member.Id, borrowedPeriod, enStatus.Active, new List<LoanExtension> { }));
         }
 
         public void MarkAsReturned()
@@ -53,16 +54,21 @@ namespace SimpleLibrarySystem.Domain.Entities
         {
             if (BorrowedPeriod.GetOverDueDays(DateTime.Now) < 0) return Money.Zero();
 
-            return new Money((decimal)BorrowedPeriod.GetOverDueDays(DateTime.Now) * 1.00m);
+            return Money.Create((decimal)BorrowedPeriod.GetOverDueDays(DateTime.Now) * 1.00m).Value;
         }
 
-        public void Extend(DateTime newDueTime)
+        public Result Extend(DateTime newDueTime)
         {
             if (_extensions.Count >= 2)
-                throw new Exception("Loan cannot be extended more than twice.");
+                return Result.Failure("Loan cannot be extended more than twice.");
 
-            BorrowedPeriod = BorrowedPeriod.Extend(newDueTime);
+            var result = BorrowedPeriod?.Extend(newDueTime);
+            if (result.IsFailure) return Result.Failure(result.Error);
+
+            BorrowedPeriod = result.Value;
             _extensions.Add(new LoanExtension(Guid.NewGuid(), newDueTime));
+
+            return Result.Success();
         }
     }
 }

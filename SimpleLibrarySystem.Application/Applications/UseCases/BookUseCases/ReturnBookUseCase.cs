@@ -1,7 +1,8 @@
-﻿using SimpleLibrarySystem.Application.Applications.Common.Results;
+﻿using SimpleLibrarySystem.Domain.Common.Results;
 using SimpleLibrarySystem.Application.Applications.Interfaces;
 using SimpleLibrarySystem.Domain.Entities;
 using SimpleLibrarySystem.Domain.Interfaces;
+using SimpleLibrarySystem.Application.DTOs;
 
 
 namespace SimpleLibrarySystem.Application.Applications.UseCases.BookUseCases
@@ -24,16 +25,22 @@ namespace SimpleLibrarySystem.Application.Applications.UseCases.BookUseCases
 
         public async Task<Result> Execute(Guid loanId)
         {
-            Loan loan = await _loanRepository.GetAsync(loanId);
-            if (loan == null) return Result.Failure("Loan not Exists!");
+            dynamic result = await _loanRepository.GetAsync(loanId);
+            if (result.IsFailure) return Result.Failure(result.Error);
 
-            if (loan.IsReturned)
-            {
-                return Result.Failure("Book has been returned before.");
-            }
+            Loan loan = result.Value;
 
-            Book book = await _bookRepository.GetAsync(loan.BookID);
-            Member member = await _memberRepository.GetAsync(loan.MemberID);
+            if (loan.IsReturned) return Result.Failure("Book has been returned before.");
+
+            result = await _memberRepository.GetAsync(loan.MemberID);
+            if (result.IsFailure) return Result.Failure(result.Error);
+
+            Member member = result.Value;
+
+            result = await _bookRepository.GetAsync(loan.BookID);
+            if (result.IsFailure) return Result.Failure(result.Error);
+
+            Book book = result.Value;
 
             try
             {
@@ -49,7 +56,8 @@ namespace SimpleLibrarySystem.Application.Applications.UseCases.BookUseCases
                 await _bookRepository.UpdateAsync(book);
                 await _memberRepository.UpdateAsync(member);
 
-                _notification.Notify("MemberEmail", "message that tell user the Returning has been done successfully.");
+                result = _notification.Notify("MemberEmail", "message that tell user the Returning has been done successfully.");
+                if (result.IsFailure) return Result.Failure(result.Error);
 
                 return Result.Success();
             }

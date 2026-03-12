@@ -1,16 +1,23 @@
 ﻿
+using SimpleLibrarySystem.Domain.Common.Results;
+
 namespace SimpleLibrarySystem.Domain.ValueObjects
 {
     public class ISBN : ValueObject
     {
-        public string Value { get; }
+        public string? Value { get; }
 
-        public ISBN(string value)
+        private ISBN(string value)
+        {
+            Value = value;
+        }
+
+        public static ResultT<ISBN> Create(string value)
         {
             if (string.IsNullOrWhiteSpace(value) || value.Length != 13)
-                throw new ArgumentException("ISBN must be exactly 13 characters.");
+                return ResultT<ISBN>.Failure("ISBN must be exactly 13 characters.");
 
-            Value = value;
+            return ResultT<ISBN>.Success(new ISBN(value));
         }
 
         protected override IEnumerable<object> GetEqualityComponents()

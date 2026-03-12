@@ -3,16 +3,16 @@ using Microsoft.AspNetCore.Mvc;
 using SimpleLibrarySystem.Application.Applications.UseCases.BookUseCases;
 using SimpleLibrarySystem.Application.DTOs;
 
-namespace SimpleLibrarySystem.API.Controllers.BookController
+namespace SimpleLibrarySystem.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class BooksController : ControllerBase
+    public class BookController : ControllerBase
     {
         private readonly BorrowBookUseCase _borrowUseCase;
-        private readonly ReturnBookUseCase  _returnUseCase;
+        private readonly ReturnBookUseCase _returnUseCase;
 
-        public BooksController(BorrowBookUseCase borrowUseCase, ReturnBookUseCase returnUseCase)
+        public BookController(BorrowBookUseCase borrowUseCase, ReturnBookUseCase returnUseCase)
         {
             _borrowUseCase = borrowUseCase;
             _returnUseCase = returnUseCase;
@@ -35,8 +35,8 @@ namespace SimpleLibrarySystem.API.Controllers.BookController
                 return BadRequest(new { Message = result.Error });
             }
 
-            return Ok(new {Message = "Book borrowed Successfully."});
-            }
+            return Ok(new { Message = "Book borrowed Successfully." });
+        }
 
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -47,7 +47,7 @@ namespace SimpleLibrarySystem.API.Controllers.BookController
 
             return result.IsSuccess
             ? Ok(new { Message = "Book returned." })
-            : BadRequest(new { Error = result.Error });
+            : BadRequest(new { result.Error });
         }
     }
 }

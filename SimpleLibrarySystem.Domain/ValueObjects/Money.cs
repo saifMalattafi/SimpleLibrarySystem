@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SimpleLibrarySystem.Domain.Common.Results;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,11 +11,18 @@ namespace SimpleLibrarySystem.Domain.ValueObjects
     {
         public decimal Amount { get; }
 
-        public Money(decimal amount)
-        {
-            if (amount < 0) throw new ArgumentException("Money cannot be negative.");
+        private Money(decimal amount)
+        { 
             Amount = amount;
         }
+
+        public static ResultT<Money> Create(decimal amount)
+        {
+            if (amount < 0) return ResultT<Money>.Failure("Money cannot be negative.");
+
+            return ResultT<Money>.Success(new Money(amount));
+        }
+                        
 
         public static Money Zero() => new Money(0);
 
