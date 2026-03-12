@@ -25,44 +25,34 @@ namespace SimpleLibrarySystem.Application.Applications.UseCases.BookUseCases
 
         public async Task<Result> Execute(BorrowBookDTO borrowBookDTO)
         {
-            dynamic result = await _memberRepository.GetAsync(borrowBookDTO.MemberID);
-            if (result.IsFailure) return Result.Failure(result.Error);
+            ResultT<Member> memberResult = await _memberRepository.GetAsync(borrowBookDTO.MemberID);
+            if (memberResult.IsFailure) return Result.Failure(memberResult.Error);
+            var member = memberResult.Value;
 
-            Member member = result.Value;
+            ResultT<Book> bookResult = await _bookRepository.GetAsync(borrowBookDTO.BookId);
+            if (bookResult.IsFailure) return Result.Failure(bookResult.Error);
+            var book = bookResult.Value;
 
-            result = await _bookRepository.GetAsync(borrowBookDTO.BookId);
-            if (result.IsFailure) return Result.Failure(result.Error);
+            if (!book.IsAvailable) return Result.Failure("Book is currently unavailable.");
+            if (!member.CanBorrow()) return Result.Failure("Member has exceeded limits or has outstanding fines.");
 
-            Book book = result.Value;
-            if (!book.IsAvailable) return Result.Failure("Book is already borrowed or in In Repair.");
+            var periodResult = Period.Create(borrowBookDTO.StartDate, borrowBookDTO.EndDate);
+            if (periodResult.IsFailure) return Result.Failure(periodResult.Error);
 
-            if (!member.CanBorrow()) return Result.Failure($"Member Exceeds the Allowed Fines/loan limits");
+            var loanResult = Loan.CreateLoan(Guid.NewGuid(), book.Id, member, periodResult.Value);
+            if (loanResult.IsFailure) return Result.Failure(loanResult.Error);
 
-            try
-            {
-                result = Period.Create(borrowBookDTO.StartDate, borrowBookDTO.EndDate);
-                if (result.IsFailure) return Result.Failure(result.Error);
+            var loan = loanResult.Value;
 
-                result = Loan.CreateLoan(Guid.NewGuid(), book.Id, member, result.Value);
-                if (result.IsFailure) return Result.Failure(result.Error);
+            member.IncrementLoans();
+            book.MarkAsBorrowed();
 
-                Loan loan = result.Value;
+            // 5. Persistence (Transactions should be here, but let's stick to the flow)
+            await _loanRepository.SaveAsync(loan);
+            await _bookRepository.UpdateAsync(book);
+            await _memberRepository.UpdateAsync(member);
 
-                member.IncrementLoans();
-                book.MarkAsBorrowed();
-
-                // should be in a single transaction.
-                await _loanRepository.SaveAsync(loan);
-                await _bookRepository.UpdateAsync(book);
-                await _memberRepository.UpdateAsync(member);
-
-                result = _notification.Notify("MemberEmail", "message that tell user the Borrowing has been done successfully.");
-                if (result.IsFailure) return Result.Failure(result.Error);
-
-                return Result.Success();
-            }
-            catch (ArgumentException ex)
-            { return Result.Failure(ex.Message); }
+            return Result.Success();
         }
     }
 }

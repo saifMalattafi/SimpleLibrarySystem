@@ -2,8 +2,6 @@
 using SimpleLibrarySystem.Application.Applications.Interfaces;
 using SimpleLibrarySystem.Domain.Entities;
 using SimpleLibrarySystem.Domain.Interfaces;
-using SimpleLibrarySystem.Application.DTOs;
-
 
 namespace SimpleLibrarySystem.Application.Applications.UseCases.BookUseCases
 {
@@ -14,8 +12,11 @@ namespace SimpleLibrarySystem.Application.Applications.UseCases.BookUseCases
         private readonly IMemberRepository _memberRepository;
         private readonly INotificationService _notification;
 
-        public ReturnBookUseCase(IBookRepository bookRepository, ILoanRepository loanRepository,
-            IMemberRepository memberRepository, INotificationService notification)
+        public ReturnBookUseCase(
+            IBookRepository bookRepository,
+            ILoanRepository loanRepository,
+            IMemberRepository memberRepository,
+            INotificationService notification)
         {
             _bookRepository = bookRepository;
             _loanRepository = loanRepository;
@@ -25,44 +26,40 @@ namespace SimpleLibrarySystem.Application.Applications.UseCases.BookUseCases
 
         public async Task<Result> Execute(Guid loanId)
         {
-            dynamic result = await _loanRepository.GetAsync(loanId);
-            if (result.IsFailure) return Result.Failure(result.Error);
+            ResultT<Loan> loanResult = await _loanRepository.GetAsync(loanId);
+            if (loanResult.IsFailure) return Result.Failure(loanResult.Error);
+            var loan = loanResult.Value;
 
-            Loan loan = result.Value;
+            if (loan.IsReturned) return Result.Failure("Book has already been returned.");
 
-            if (loan.IsReturned) return Result.Failure("Book has been returned before.");
+            ResultT<Member> memberResult = await _memberRepository.GetAsync(loan.MemberID);
+            if (memberResult.IsFailure) return Result.Failure(memberResult.Error);
+            var member = memberResult.Value;
 
-            result = await _memberRepository.GetAsync(loan.MemberID);
-            if (result.IsFailure) return Result.Failure(result.Error);
+            ResultT<Book> bookResult = await _bookRepository.GetAsync(loan.BookID);
+            if (bookResult.IsFailure) return Result.Failure(bookResult.Error);
+            var book = bookResult.Value;
 
-            Member member = result.Value;
+            member.ApplyFines(loan.CalculateFine(), $"Overdue: {loan.Id}");
 
-            result = await _bookRepository.GetAsync(loan.BookID);
-            if (result.IsFailure) return Result.Failure(result.Error);
-
-            Book book = result.Value;
+            loan.MarkAsReturned();
+            book.MakeAvailable();
+            member.DecrementLoans();
 
             try
             {
-
-                member.ApplyFines(loan.CalculateFine(), "Fine Reason");
-
-                loan.MarkAsReturned();
-                book.MakeAvailable();
-                member.DecrementLoans();
-
-                // should be saved in a single transaction.
                 await _loanRepository.UpdateAsync(loan);
                 await _bookRepository.UpdateAsync(book);
                 await _memberRepository.UpdateAsync(member);
 
-                result = _notification.Notify("MemberEmail", "message that tell user the Returning has been done successfully.");
-                if (result.IsFailure) return Result.Failure(result.Error);
+                _notification.Notify("member.Email", "Return processed successfully.");
 
                 return Result.Success();
             }
-            catch (ArgumentException ex) { return Result.Failure(ex.Message); }
-
+            catch (Exception ex)
+            {
+                return Result.Failure("A persistence error occurred. Data may be inconsistent.");
+            }
         }
     }
 }
