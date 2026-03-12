@@ -10,12 +10,12 @@ namespace SimpleLibrarySystem.Infrastructure.Repositories
     {
         private static readonly List<Book> _books = new List<Book>
         {
-            new Book(Guid.NewGuid(), ISBN.Create("9780132350884").Value, "Clean Code", PersonName.Create("Robert").Value, enStatus.Available),
-            new Book(Guid.NewGuid(), ISBN.Create("9780132350881").Value, "Design Patterns", PersonName.Create("Robert").Value, enStatus.Available),
-            new Book(Guid.NewGuid(), ISBN.Create("9780132350882").Value, "C++", PersonName.Create("Robert").Value, enStatus.Available),
-            new Book(Guid.NewGuid(), ISBN.Create("9780132350885").Value, "C# Language", PersonName.Create("Robert").Value, enStatus.Available),
-            new Book(Guid.NewGuid(), ISBN.Create("9780201616224").Value, "The Pragmatic Programmer", PersonName.Create("Andrew").Value, enStatus.Borrowed),
-            new Book(Guid.NewGuid(), ISBN.Create("9780134494166").Value, "Clean Architecture", PersonName.Create("Robert").Value, enStatus.InRepair)
+            Create(Guid.NewGuid(), ISBN.Create("9780132350884").Value, "Clean Code", PersonName.Create("Robert").Value, enStatus.Available).Value,
+            Create(Guid.NewGuid(), ISBN.Create("9780132350881").Value, "Design Patterns", PersonName.Create("Robert").Value, enStatus.Available).Value,
+            Create(Guid.NewGuid(), ISBN.Create("9780132350882").Value, "C++", PersonName.Create("Robert").Value, enStatus.Available).Value,
+            Create(Guid.NewGuid(), ISBN.Create("9780132350885").Value, "C# Language", PersonName.Create("Robert").Value, enStatus.Available).Value,
+            Create(Guid.NewGuid(), ISBN.Create("9780201616224").Value, "The Pragmatic Programmer", PersonName.Create("Andrew").Value, enStatus.Borrowed).Value,
+            Create(Guid.NewGuid(), ISBN.Create("9780134494166").Value, "Clean Architecture", PersonName.Create("Robert").Value, enStatus.InRepair).Value
         };
 
         public async Task<Result> AddAsync(Book book)

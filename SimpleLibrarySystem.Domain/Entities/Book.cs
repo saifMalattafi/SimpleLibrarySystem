@@ -16,7 +16,7 @@ namespace SimpleLibrarySystem.Domain.Entities
 
         public bool IsAvailable { get { return Status == enStatus.Available; } }
 
-        public Book(Guid id, ISBN? iSBN, string? title, PersonName? author, enStatus? status = enStatus.Available)
+        private Book(Guid id, ISBN? iSBN, string? title, PersonName? author, enStatus? status = enStatus.Available)
             : base(id)
         {
             ISBN = iSBN;

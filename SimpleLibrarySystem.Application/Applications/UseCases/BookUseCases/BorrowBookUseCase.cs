@@ -4,6 +4,7 @@ using SimpleLibrarySystem.Application.DTOs;
 using SimpleLibrarySystem.Domain.Entities;
 using SimpleLibrarySystem.Domain.Interfaces;
 using System.Linq.Expressions;
+using SimpleLibrarySystem.Domain.ValueObjects;
 
 namespace SimpleLibrarySystem.Application.Applications.UseCases.BookUseCases
 {
@@ -39,7 +40,10 @@ namespace SimpleLibrarySystem.Application.Applications.UseCases.BookUseCases
 
             try
             {
-                result = Loan.CreateLoan(Guid.NewGuid(), book.Id, member, borrowBookDTO.Period);
+                result = Period.Create(borrowBookDTO.StartDate, borrowBookDTO.EndDate);
+                if (result.IsFailure) return Result.Failure(result.Error);
+
+                result = Loan.CreateLoan(Guid.NewGuid(), book.Id, member, result.Value);
                 if (result.IsFailure) return Result.Failure(result.Error);
 
                 Loan loan = result.Value;

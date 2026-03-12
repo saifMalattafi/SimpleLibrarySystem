@@ -6,6 +6,7 @@ namespace SimpleLibrarySystem.Application.DTOs
     {
         public Guid MemberID { get; set; }
         public Guid BookId { get; set; }
-        public Period Period { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
     }
 }
